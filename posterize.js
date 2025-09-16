@@ -60,13 +60,16 @@ export function applyPosterizeToImage(canvas, image, levels = 5.0, edgeMix = 0.1
     float skyMask = smoothstep(0.45, 0.0, vUV.y); // 1 at top, 0 by ~45% down
 
     // Lava lamp displacement
-    vec2 motion = vec2(fbm(vUV * 3.0 + uTime * 0.1), fbm(vUV * 3.0 - uTime * 0.1));
-    vec2 distortedUV = vUV + (motion - 0.5) * 0.05 * skyMask; // Apply displacement based on mask
+    vec2 motion = vec2(fbm(vUV * 2.5 + uTime * 0.08), fbm(vUV * 2.5 - uTime * 0.08));
+    vec2 distortedUV = vUV + (motion - 0.5) * 0.1 * skyMask; // Apply displacement based on mask. Increased from 0.05
 
     vec3 col = texture2D(uTex0, distortedUV).rgb;
 
+    // Modulate posterization levels with fog motion in the sky
+    float dynamicLevels = uLevels + motion.x * 3.0 * skyMask;
+
     col = pow(col, vec3(1.0/2.2));
-    vec3 post = posterize(col, uLevels);
+    vec3 post = posterize(col, dynamicLevels); // Use dynamic levels
     post = pow(post, vec3(2.2));
 
     // Sobel edge on gamma-corrected luminance (using original UVs for sampling neighbors for stability)
